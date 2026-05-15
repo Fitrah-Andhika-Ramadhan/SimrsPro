@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.git
+.github
+.gitignore
+.firebase
+.firebaserc
+firebase.json
+README.md
