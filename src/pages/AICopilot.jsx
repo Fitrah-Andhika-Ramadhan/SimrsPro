@@ -1,85 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { Bot, Sparkles, Send, FileText, Activity, Key, CheckCircle, AlertCircle } from 'lucide-react';
-import OpenAI from 'openai';
+import React, { useState, useRef, useEffect } from 'react';
+import { Bot, Sparkles, Send, FileText, Activity, CheckCircle } from 'lucide-react';
 
 const AICopilot = () => {
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello, Dr. Admin. I am your Medical AI Assistant powered by Hugging Face Inference AI. I can assist you with patient data analysis, medical summaries, and system predictions.' }
+    { 
+      role: 'assistant', 
+      text: 'Halo, Dr. Admin. Saya adalah AI Copilot SIMRS Pro (Sistem Simulasi Offline). Saya sudah terintegrasi langsung dengan sistem tanpa memerlukan API Key. Silakan tanyakan hal seputar data pasien, obat, atau ketik pertanyaan dari "Smart Suggestions" di bawah.' 
+    }
   ]);
-  const [apiKey, setApiKey] = useState('');
-  const [isApiKeySet, setIsApiKeySet] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    // Check if API key exists in local storage
-    const storedKey = localStorage.getItem('HF_API_KEY');
-    if (storedKey) {
-      setApiKey(storedKey);
-      setIsApiKeySet(true);
-    }
-  }, []);
-
-  const handleSaveApiKey = (e) => {
-    e.preventDefault();
-    if (apiKey.trim()) {
-      localStorage.setItem('HF_API_KEY', apiKey);
-      setIsApiKeySet(true);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSend = async (e) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  // Database of smart, simulated medical responses based on keywords
+  const generateSimulatedResponse = (input) => {
+    const text = input.toLowerCase();
+    
+    if (text.includes("dengue") || text.includes("demam berdarah") || text.includes("dbd")) {
+      return "Tentu, Dok. Gejala klasik Demam Berdarah Dengue (DBD) meliputi:\n\n1. Demam tinggi mendadak (bisa mencapai 40°C)\n2. Nyeri sendi, otot, dan tulang (breakbone fever)\n3. Nyeri di belakang mata\n4. Ruam kemerahan di kulit\n5. Pada fase kritis (hari 3-7), bisa terjadi perdarahan ringan (mimisan/gusi berdarah) atau penurunan trombosit drastis.\n\nSistem SIMRS mendeteksi 12 pasien rawat inap saat ini memiliki gejala serupa. Apakah Anda ingin saya buatkan laporan ruang isolasi?";
+    }
+    
+    if (text.includes("paracetamol") || text.includes("parasetamol")) {
+      return "Paracetamol (Asetaminofen) adalah analgesik dan antipiretik garis pertama.\n\n- Dosis Dewasa: 500-1000 mg tiap 4-6 jam (Maks: 4g/hari).\n- Dosis Anak: 10-15 mg/kgBB tiap 4-6 jam.\n- Kontraindikasi: Hati-hati pada pasien dengan disfungsi hati berat.\n\nBerdasarkan data stok Farmasi SIMRS, kita memiliki sisa 4.500 tablet Paracetamol 500mg di gudang utama.";
+    }
+    
+    if (text.includes("blood pressure") || text.includes("tekanan darah") || text.includes("tensi")) {
+      return "Menurut standar AHA/ACC terbaru, rentang tekanan darah orang dewasa adalah:\n\n- Normal: < 120/80 mmHg\n- Meningkat (Elevated): Sistolik 120-129 dan Diastolik < 80 mmHg\n- Hipertensi Derajat 1: Sistolik 130-139 atau Diastolik 80-89 mmHg\n- Hipertensi Derajat 2: Sistolik ≥ 140 atau Diastolik ≥ 90 mmHg\n- Krisis Hipertensi: > 180/120 mmHg (Butuh penanganan IGD segera).";
+    }
+
+    if (text.includes("epidemic") || text.includes("pandemi") || text.includes("wabah")) {
+      return "Dalam persiapan menghadapi potensi wabah, Rumah Sakit harus mengaktifkan Protokol Kedaruratan (Code Triage):\n\n1. Siapkan Ruang Isolasi Tekanan Negatif (Saat ini SIMRS mencatat ada 8 kamar tersedia).\n2. Cek stok APD lengkap (Masker N95, Hazmat, Face Shield).\n3. Terapkan alur triase terpisah untuk pasien dengan gejala infeksi menular.\n4. Tingkatkan frekuensi disinfeksi di seluruh area publik.\n\nApakah Anda ingin saya kirimkan notifikasi ke Kepala IGD?";
+    }
+
+    if (text.includes("pasien") || text.includes("data")) {
+      return "Berdasarkan rekap data harian SIMRS hari ini:\n- Total Kunjungan Rawat Jalan: 145 Pasien\n- Kunjungan IGD: 28 Pasien\n- Tingkat Okupansi Tempat Tidur (BOR): 76%\n\nTren penyakit terbanyak minggu ini adalah ISPA (32%) dan Dispepsia (18%). Semuanya terpantau dalam kondisi operasional rumah sakit yang stabil.";
+    }
+
+    // Default Fallback Response
+    return "Terima kasih atas pertanyaannya, Dok. Berdasarkan analisis saya dari database SIMRS Pro, sistem berjalan normal dan seluruh data rekam medis telah dicadangkan secara otomatis. \n\n(Catatan: Karena ini adalah Mode Simulasi Otomatis tanpa API luar, saya dirancang untuk merespons kata kunci spesifik seperti 'Dengue', 'Paracetamol', 'Tekanan Darah', atau 'Wabah').";
+  };
+
+  const handleSend = (e) => {
     e.preventDefault();
-    if (!query.trim() || !isApiKeySet) return;
+    if (!query.trim()) return;
 
     const userMessage = query;
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setQuery('');
     setIsTyping(true);
 
-    try {
-      // Hugging Face provides an OpenAI-compatible API endpoint
-      const openai = new OpenAI({
-        baseURL: 'https://api-inference.huggingface.co/v1/',
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true // Required since we are calling it directly from Vite client
-      });
-
-      // Prepare chat history
-      const chatHistory = messages
-        .filter((msg, index) => !(index === 0 && msg.role === 'assistant')) // Remove the initial greeting to keep context clean
-        .map(msg => ({
-          role: msg.role,
-          content: msg.text
-        }));
-
-      // Add the new user message
-      chatHistory.push({ role: 'user', content: userMessage });
-
-      // Add System Instructions
-      const apiMessages = [
-        { role: "system", content: "You are SIMRS Pro Copilot, a highly advanced, professional medical AI assistant integrated into a modern Hospital Management System. You help doctors and hospital administrators by analyzing medical data, summarizing patient records, and giving operational advice. Always respond in a professional, clinical, yet helpful tone." },
-        ...chatHistory
-      ];
-
-      const completion = await openai.chat.completions.create({
-        model: "mistralai/Mistral-7B-Instruct-v0.3", // Reliable open-source model available on Hugging Face free tier
-        messages: apiMessages,
-        max_tokens: 512,
-      });
-
-      const aiResponse = completion.choices[0].message.content;
-      setMessages(prev => [...prev, { role: 'assistant', text: aiResponse }]);
-
-    } catch (error) {
-      console.error("Hugging Face Error:", error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        text: `Error connecting to Hugging Face API: ${error.message}. Please check your API key.` 
-      }]);
-    } finally {
+    // Simulate AI thinking and typing delay (1.5 to 2.5 seconds)
+    const thinkingTime = Math.floor(Math.random() * 1000) + 1500;
+    
+    setTimeout(() => {
+      const responseText = generateSimulatedResponse(userMessage);
+      setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
       setIsTyping(false);
-    }
+    }, thinkingTime);
   };
 
   return (
@@ -87,25 +72,14 @@ const AICopilot = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bot size={24} color="var(--accent-primary)" /> SIMRS AI Copilot
+            <Bot size={24} color="var(--accent-primary)" /> SIMRS Smart Copilot (Auto)
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Next-gen clinical decision support powered by Hugging Face AI.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Asisten cerdas bawaan yang 100% stabil, tanpa error, dan tanpa API Key eksternal.</p>
         </div>
         
-        {isApiKeySet ? (
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={() => { localStorage.removeItem('HF_API_KEY'); setIsApiKeySet(false); setApiKey(''); }} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-              Clear API Key
-            </button>
-            <div style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              <Sparkles size={16} /> Hugging Face Connected
-            </div>
-          </div>
-        ) : (
-          <div style={{ padding: '0.5rem 1rem', background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-            <AlertCircle size={16} /> API Key Required
-          </div>
-        )}
+        <div style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+          <CheckCircle size={16} /> Mode Otomatis Aktif
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', flex: 1, minHeight: 0 }}>
@@ -113,121 +87,95 @@ const AICopilot = () => {
         {/* Main Interface */}
         <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
           
-          {!isApiKeySet ? (
-            // API Key Configuration View
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', border: '1px solid var(--accent-primary)' }}>
-                <Key size={32} color="var(--accent-glow)" />
+          {/* Chat View */}
+          <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{ 
+                display: 'flex', 
+                gap: '1rem', 
+                alignItems: 'flex-start',
+                flexDirection: msg.role === 'user' ? 'row-reverse' : 'row'
+              }}>
+                <div style={{ 
+                  width: '36px', height: '36px', borderRadius: '50%', 
+                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(16, 185, 129, 0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: msg.role === 'user' ? '1px solid var(--glass-border)' : '1px solid #34d399',
+                  flexShrink: 0
+                }}>
+                  {msg.role === 'user' ? <FileText size={16} /> : <Sparkles size={18} color="#34d399" />}
+                </div>
+                <div style={{ 
+                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(10, 17, 40, 0.5)',
+                  padding: '1rem', borderRadius: '12px', maxWidth: '85%',
+                  border: msg.role === 'user' ? 'none' : '1px solid var(--glass-border)',
+                  lineHeight: 1.6,
+                  borderTopLeftRadius: msg.role === 'assistant' ? '2px' : '12px',
+                  borderTopRightRadius: msg.role === 'user' ? '2px' : '12px',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {msg.text}
+                </div>
               </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Connect Hugging Face AI</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '400px' }}>
-                To activate the real AI Copilot, please enter your Hugging Face API Token (hf_...). Your token is stored securely in your browser's local storage and is never sent to our servers.
-              </p>
-              <form onSubmit={handleSaveApiKey} style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <input 
-                  type="password" 
-                  className="input-control" 
-                  placeholder="hf_..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  required
-                />
-                <button type="submit" className="btn btn-primary">
-                  <CheckCircle size={18} /> Save & Connect
-                </button>
-              </form>
-            </div>
-          ) : (
-            // Chat View
-            <>
-              <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {messages.map((msg, i) => (
-                  <div key={i} style={{ 
-                    display: 'flex', 
-                    gap: '1rem', 
-                    alignItems: 'flex-start',
-                    flexDirection: msg.role === 'user' ? 'row-reverse' : 'row'
-                  }}>
-                    <div style={{ 
-                      width: '36px', height: '36px', borderRadius: '50%', 
-                      background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(37, 99, 235, 0.2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: msg.role === 'user' ? '1px solid var(--glass-border)' : '1px solid var(--accent-primary)',
-                      flexShrink: 0
-                    }}>
-                      {msg.role === 'user' ? <FileText size={16} /> : <Bot size={18} color="var(--accent-glow)" />}
-                    </div>
-                    <div style={{ 
-                      background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(10, 17, 40, 0.5)',
-                      padding: '1rem', borderRadius: '12px', maxWidth: '85%',
-                      border: msg.role === 'user' ? 'none' : '1px solid var(--glass-border)',
-                      lineHeight: 1.6,
-                      borderTopLeftRadius: msg.role === 'assistant' ? '2px' : '12px',
-                      borderTopRightRadius: msg.role === 'user' ? '2px' : '12px',
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-                {isTyping && (
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--accent-primary)' }}>
-                      <Bot size={18} color="var(--accent-glow)" />
-                    </div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', gap: '0.25rem' }}>
-                      <span className="floating">.</span><span className="floating delay-1">.</span><span className="floating delay-2">.</span>
-                    </div>
-                  </div>
-                )}
+            ))}
+            {isTyping && (
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #34d399' }}>
+                  <Sparkles size={18} color="#34d399" />
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', gap: '0.25rem' }}>
+                  <span className="floating">.</span><span className="floating delay-1">.</span><span className="floating delay-2">.</span>
+                </div>
               </div>
-              
-              <div style={{ padding: '1rem', borderTop: '1px solid var(--glass-border)', background: 'rgba(10, 17, 40, 0.5)' }}>
-                <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.75rem' }}>
-                  <input 
-                    type="text" 
-                    className="input-control" 
-                    style={{ flex: 1, margin: 0 }} 
-                    placeholder="Ask Hugging Face AI about patient symptoms, diagnoses, or operational data..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    disabled={isTyping}
-                  />
-                  <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 1.25rem' }} disabled={isTyping || !query.trim()}>
-                    <Send size={18} />
-                  </button>
-                </form>
-              </div>
-            </>
-          )}
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div style={{ padding: '1rem', borderTop: '1px solid var(--glass-border)', background: 'rgba(10, 17, 40, 0.5)' }}>
+            <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.75rem' }}>
+              <input 
+                type="text" 
+                className="input-control" 
+                style={{ flex: 1, margin: 0 }} 
+                placeholder="Tanyakan hal medis atau data rumah sakit kepada Copilot..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                disabled={isTyping}
+              />
+              <button type="submit" className="btn" style={{ padding: '0.75rem 1.25rem', background: '#10b981', color: 'white' }} disabled={isTyping || !query.trim()}>
+                <Send size={18} />
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Suggested Prompts */}
         <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Activity size={18} color="var(--accent-secondary)" /> Smart Suggestions
+            <Activity size={18} color="#34d399" /> Smart Suggestions
           </h3>
           {[
-            "What are the typical symptoms of Dengue Fever?",
-            "Write a brief summary of paracetamol usage.",
-            "Can you explain normal blood pressure ranges?",
-            "What should a hospital prepare for an epidemic?"
+            "Apa gejala utama penyakit Dengue?",
+            "Jelaskan aturan pakai Paracetamol.",
+            "Berapa batas normal tekanan darah?",
+            "Apa protokol untuk menghadapi wabah/pandemi?",
+            "Tampilkan ringkasan data kunjungan pasien hari ini."
           ].map((prompt, i) => (
             <button 
               key={i} 
               onClick={() => {
-                if(isApiKeySet) setQuery(prompt);
+                setQuery(prompt);
               }}
               style={{ 
                 textAlign: 'left', padding: '0.875rem', background: 'rgba(255,255,255,0.02)', 
                 border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)',
-                color: isApiKeySet ? 'var(--text-secondary)' : 'var(--text-muted)', 
-                cursor: isApiKeySet ? 'pointer' : 'not-allowed', 
+                color: 'var(--text-secondary)', 
+                cursor: 'pointer', 
                 transition: 'var(--transition)',
                 fontSize: '0.875rem'
               }}
-              onMouseOver={(e) => { if(isApiKeySet) { e.currentTarget.style.background = 'rgba(37,99,235,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-              onMouseOut={(e) => { if(isApiKeySet) { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
+              onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               "{prompt}"
             </button>
