@@ -14,6 +14,7 @@ import Laboratory from './pages/Laboratory';
 import Inpatient from './pages/Inpatient';
 import Reports from './pages/Reports';
 import LiveChat from './pages/LiveChat';
+import QueueSystem from './pages/QueueSystem';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -33,6 +34,7 @@ function App() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="live-chat" element={<LiveChat />} />
+          <Route path="queue" element={<QueueSystem />} />
           <Route path="patients" element={<Patients />} />
           <Route path="inpatient" element={<Inpatient />} />
           <Route path="appointments" element={<Appointments />} />
