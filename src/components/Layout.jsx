@@ -14,7 +14,7 @@ const Layout = () => {
 
   const navItems = [
     { path: '/app/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { path: '/app/live-chat', icon: <MessageCircle size={20} color="var(--accent-glow)" />, label: 'Live Chat' },
+    { path: '/app/ai-copilot', icon: <Bot size={20} color="var(--accent-glow)" />, label: 'AI Copilot' },
     { path: '/app/patients', icon: <Users size={20} />, label: 'Patients' },
     { path: '/app/inpatient', icon: <BedDouble size={20} />, label: 'Inpatient (IGD)' },
     { path: '/app/appointments', icon: <Calendar size={20} />, label: 'Appointments' },
