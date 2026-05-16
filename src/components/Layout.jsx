@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Activity, Users, Calendar, Settings, LogOut, LayoutDashboard, Pill, CreditCard, Stethoscope, Microscope, BedDouble, BarChart2, Bot, MessageCircle } from 'lucide-react';
+import { Activity, Users, Calendar, Settings, LogOut, LayoutDashboard, Pill, CreditCard, Stethoscope, Microscope, BedDouble, BarChart2, Bot, MessageSquare } from 'lucide-react';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Layout = () => {
 
   const navItems = [
     { path: '/app/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { path: '/app/ai-copilot', icon: <Bot size={20} color="var(--accent-glow)" />, label: 'AI Copilot' },
+    { path: '/app/live-chat', icon: <MessageSquare size={20} color="var(--accent-glow)" />, label: 'Live Chat' },
     { path: '/app/patients', icon: <Users size={20} />, label: 'Patients' },
     { path: '/app/inpatient', icon: <BedDouble size={20} />, label: 'Inpatient (IGD)' },
     { path: '/app/appointments', icon: <Calendar size={20} />, label: 'Appointments' },

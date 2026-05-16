@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Sparkles, Send, FileText, Activity, CheckCircle, HeartPulse, User, ShieldCheck, Bell } from 'lucide-react';
+import { Bot, Send, FileText, Activity, CheckCircle, HeartPulse, User, ShieldCheck, Bell, MessageSquare } from 'lucide-react';
 
-const AICopilot = () => {
+const LiveChat = () => {
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [toast, setToast] = useState(null);
   const [messages, setMessages] = useState([
     { 
-      role: 'assistant', 
-      text: 'Halo! Saya adalah AI Assistant SIMRS Pro (Mode Offline). Saya dirancang khusus untuk membantu menjawab pertanyaan Anda tanpa gangguan koneksi. \n\nAnda bisa menyapa saya, bertanya seputar masalah kesehatan, obat, jadwal dokter, prosedur rawat inap, atau data rumah sakit kita!' 
+      role: 'bot', 
+      text: 'Halo! Selamat datang di layanan Live Chat SIMRS Pro. Saya adalah asisten bot (Customer Service) yang siap melayani Anda 24/7. \n\nSilakan sampaikan keluhan Anda, atau tanyakan informasi terkait jadwal dokter, rawat inap, IGD, maupun layanan rumah sakit lainnya.' 
     }
   ]);
   const messagesEndRef = useRef(null);
@@ -27,74 +27,59 @@ const AICopilot = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // DATABASE SIMULASI OFFLINE (KATA KUNCI & JAWABAN)
+  // DATABASE SIMULASI OFFLINE (KATA KUNCI BOT)
   const generateSimulatedResponse = (input) => {
     const text = input.toLowerCase();
     
     // 1. SAPAAN & KABAR
     if (text.match(/^(halo|hai|hey|hi|helo)/)) {
-      return "Halo! Selamat datang di layanan SIMRS Pro. Ada yang bisa saya bantu terkait jadwal dokter, informasi pasien, atau konsultasi kesehatan singkat hari ini?";
+      return "Halo! Ada yang bisa saya bantu terkait jadwal dokter, pendaftaran pasien, atau konsultasi layanan hari ini?";
     }
     if (text.includes("selamat pagi")) return "Selamat pagi! Semoga hari Anda sehat selalu. Ada informasi rumah sakit yang Anda butuhkan?";
-    if (text.includes("selamat siang")) return "Selamat siang! Butuh bantuan mengecek antrean poli atau sekadar info kesehatan?";
-    if (text.includes("selamat malam")) return "Selamat malam! Layanan IGD kami beroperasi 24 jam. Ada yang bisa saya bantu?";
-    if (text.includes("apa kabar") || text.includes("gimana kabarmu")) {
-      return "Kabar saya sangat baik dan sistem SIMRS berjalan 100% lancar hari ini! Bagaimana dengan kesehatan Anda? Jangan lupa minum air putih yang cukup ya.";
-    }
+    if (text.includes("selamat siang")) return "Selamat siang! Butuh bantuan mengecek antrean poli atau sekadar info fasilitas?";
+    if (text.includes("selamat malam")) return "Selamat malam! Layanan IGD kami beroperasi 24 jam. Apakah ini kondisi darurat?";
     if (text.includes("terima kasih") || text.includes("makasih") || text.includes("thanks")) {
-      return "Sama-sama! Senang bisa membantu Anda. Jika ada pertanyaan lain seputar pelayanan kami, jangan ragu untuk bertanya.";
-    }
-    if (text.includes("siapa kamu") || text.includes("kamu siapa")) {
-      return "Saya adalah AI Copilot SIMRS Pro. Asisten virtual mandiri yang siap membantu Anda menjawab info kesehatan dan menavigasi data operasional Rumah Sakit ini.";
+      return "Sama-sama! Senang bisa membantu Anda. Jika ada keluhan lain, jangan ragu untuk menghubungi layanan Live Chat ini kembali.";
     }
 
-    // 2. OBROLAN TENTANG KESEHATAN UMUM
+    // 2. OBROLAN KESEHATAN UMUM / FAQ PASIEN
     if (text.includes("pusing") || text.includes("sakit kepala")) {
-      return "Sakit kepala bisa disebabkan oleh kurang tidur, dehidrasi, stres, atau ketegangan mata. \n\nTips awal:\n1. Istirahat sejenak di ruangan yang gelap & tenang.\n2. Minum air putih hangat.\n3. Jika berlanjut, Anda bisa mengonsumsi Paracetamol.\n\nNamun, jika sakit kepala terasa sangat hebat dan disertai muntah, segera buat janji dengan Poli Saraf kami.";
+      return "Jika Anda sering merasa pusing atau sakit kepala berlebih, kami menyarankan untuk beristirahat yang cukup. Namun jika berlanjut lebih dari 3 hari, silakan daftarkan diri Anda ke Poli Umum/Saraf agar dokter dapat memeriksa tekanan darah dan kondisi fisik Anda secara langsung.";
     }
     if (text.includes("demam") || text.includes("panas")) {
-      return "Gejala demam (suhu > 37.5°C) adalah tanda tubuh sedang melawan infeksi. \n\nSaran penanganan pertama:\n- Kompres dengan air hangat (bukan air dingin).\n- Perbanyak asupan cairan (air, kuah sup, jus).\n- Minum obat penurun panas (Paracetamol) sesuai dosis.\n\nJika demam tidak turun lebih dari 3 hari, sebaiknya segera periksakan ke Poli Umum.";
-    }
-    if (text.includes("batuk") || text.includes("pilek") || text.includes("flu")) {
-      return "Untuk batuk dan pilek ringan:\n- Istirahat yang cukup.\n- Gunakan masker agar tidak menularkan ke orang lain.\n- Minum air hangat dicampur madu dan lemon untuk melegakan tenggorokan.\n- Jika batuk berdahak kuning/hijau atau sesak napas, disarankan untuk konsultasi dengan dokter paru.";
+      return "Untuk pertolongan pertama pada demam, perbanyak minum air putih dan gunakan kompres hangat. Anda bisa meminum obat penurun panas (seperti Paracetamol) sesuai dosis anjuran. Bila demam > 3 hari, sebaiknya lakukan cek lab (hematologi).";
     }
     if (text.includes("dengue") || text.includes("demam berdarah") || text.includes("dbd")) {
-      return "Gejala Demam Berdarah Dengue (DBD):\n1. Demam tinggi mendadak (2-7 hari).\n2. Nyeri sendi, otot, dan di belakang mata.\n3. Muncul bintik merah di kulit.\n\nJika mengalami ini, segera ke IGD SIMRS Pro agar kami bisa melakukan cek darah (trombosit & hematokrit) secara cepat.";
+      return "Penyakit Demam Berdarah Dengue (DBD) memerlukan penanganan segera jika disertai tanda bahaya seperti muntah terus-menerus, pendarahan gusi, atau tubuh terasa sangat lemas. Kami sarankan segera menuju IGD kami untuk dilakukan tes Trombosit.";
     }
     if (text.includes("darah tinggi") || text.includes("hipertensi") || text.includes("tensi")) {
-      return "Hipertensi sering disebut 'Silent Killer'. Batas normal tensi orang dewasa adalah 120/80 mmHg.\n\nCara mencegah/mengontrol:\n1. Kurangi konsumsi garam harian.\n2. Olahraga rutin (30 menit sehari).\n3. Kurangi stres.\n\nDi aplikasi SIMRS, Anda bisa membuat jadwal rutin dengan Poli Penyakit Dalam untuk pemantauan tensi.";
+      return "Apakah Anda memiliki riwayat hipertensi sebelumnya? Sangat penting untuk rutin memantau tensi (batas normal < 120/80 mmHg). Anda dapat mendaftarkan diri ke Poli Penyakit Dalam untuk konsultasi lebih intensif mengenai asupan obat-obatan.";
     }
     if (text.includes("asam lambung") || text.includes("gerd") || text.includes("maag")) {
-      return "Gejala asam lambung naik (GERD) meliputi dada terasa terbakar (heartburn), mual, dan mulut terasa pahit.\n\nTips:\n- Hindari makanan pedas, asam, dan berlemak tinggi.\n- Jangan langsung berbaring setelah makan (tunggu 2-3 jam).\n- Makan dalam porsi kecil tapi sering.";
-    }
-    if (text.includes("paracetamol") || text.includes("parasetamol") || text.includes("obat")) {
-      return "Paracetamol adalah obat umum untuk pereda nyeri dan penurun panas.\n- Dosis Dewasa: 500-1000 mg per 4-6 jam.\n- Jangan gunakan melebihi 4 gram sehari karena dapat membebani kerja fungsi hati.\nPastikan Anda membeli obat di Instalasi Farmasi kami yang terjamin keasliannya.";
+      return "Untuk mengurangi gejala asam lambung naik, hindari makanan yang terlalu asam, pedas, atau berlemak, serta hindari langsung berbaring setelah makan. Jika keluhan berlanjut, hubungi dokter Poli Penyakit Dalam untuk mendapatkan resep penetral asam lambung (seperti Omeprazole/Antasida).";
     }
 
-    // 3. BERKAITAN DENGAN DATA WEB/RUMAH SAKIT UNTUK PASIEN & ADMIN
+    // 3. LAYANAN RUMAH SAKIT
     if (text.includes("jadwal dokter") || text.includes("dokter spesialis")) {
-      return "Di SIMRS Pro, jadwal Poli Spesialis beroperasi dari Senin - Sabtu (08:00 - 16:00).\n\nDokter unggulan kami hari ini:\n- Dr. Andi (Sp. Penyakit Dalam) - Ruang 101\n- Dr. Sarah (Sp. Anak) - Ruang 204\n- Dr. Budi (Sp. Bedah) - Ruang 305\n\nAnda dapat memesan antrean secara langsung melalui menu 'Appointments' di sebelah kiri.";
+      return "Jadwal operasional Poli Spesialis adalah Senin - Sabtu (08:00 - 16:00 WIB).\n\nDokter unggulan kami hari ini:\n- Dr. Andi (Sp. Penyakit Dalam) - Ruang 101\n- Dr. Sarah (Sp. Anak) - Ruang 204\n- Dr. Budi (Sp. Bedah) - Ruang 305\n\nAnda dapat memesan nomor antrean secara online melalui menu Pendaftaran Pasien.";
     }
     if (text.includes("rawat inap") || text.includes("inpatient") || text.includes("kamar")) {
-      return "Data Rawat Inap SIMRS hari ini:\n- Total Kapasitas Kamar: 120 Bed\n- Kamar Terisi (BOR): 75% (90 Bed)\n- Kelas VIP & VVIP: Tersedia 4 kamar.\n- Ruang Isolasi: Tersedia 2 kamar.\n\nUntuk detail registrasi ruang rawat, silakan masuk ke menu 'Inpatient (IGD)' pada bilah navigasi kiri.";
+      return "Informasi Kamar Rawat Inap SIMRS hari ini:\n- Kelas VIP & VVIP: Tersedia 4 kamar.\n- Kelas 1 & 2: Tersedia 20 kamar.\n- Kelas 3: Penuh.\n\nUntuk detail registrasi ruang rawat atau tarif per malam, silakan tanyakan kepada Admin Admission di lobi utama.";
     }
     if (text.includes("igd") || text.includes("gawat darurat") || text.includes("emergency")) {
-      return "Instalasi Gawat Darurat (IGD) SIMRS Pro buka 24 Jam non-stop dengan fasilitas lengkap:\n- 2 Ruang Resusitasi\n- 8 Bed Observasi\n- Tim Bedah Siaga\n- Layanan Ambulance On-Call\n\nJika dalam keadaan darurat, mohon segera hubungi hotline (021) 119-SIMRS.";
+      return "Instalasi Gawat Darurat (IGD) kami BUKA 24 JAM. Jika Anda dalam kondisi gawat darurat atau membutuhkan evakuasi Ambulans segera, silakan hubungi hotline Call Center di (021) 119-SIMRS.";
     }
     if (text.includes("laboratorium") || text.includes("lab") || text.includes("cek darah")) {
-      return "Layanan Laboratorium Patologi Klinik kami menyediakan:\n- Cek Darah Lengkap (Hematologi)\n- Profil Lipid (Kolesterol)\n- Fungsi Hati & Ginjal\n- Tes Gula Darah Puasa (GDP)\n\nHasil lab terintegrasi langsung dengan Rekam Medis Elektronik Anda di sistem kami dan bisa dilihat dalam 2-4 jam.";
+      return "Layanan Laboratorium Patologi Klinik kami buka 24 jam untuk melayani tes darah rutin, fungsi hati, ginjal, hingga swab antigen/PCR. Hasil lab bisa diakses secara online oleh pasien melalui rekam medis elektronik.";
     }
-    if (text.includes("pasien") || text.includes("jumlah kunjungan") || text.includes("statistik")) {
-      return "Statistik SIMRS Hari Ini:\n- Kunjungan Rawat Jalan: 154 Pasien\n- Kunjungan IGD: 32 Pasien\n- Pasien Sembuh (Pulang): 18 Pasien\n- Kasus tertinggi minggu ini: ISPA dan Dispepsia.\n\nData ini sepenuhnya ter-update secara real-time pada menu 'Dashboard'.";
-    }
-    if (text.includes("farmasi") || text.includes("apotek")) {
-      return "Instalasi Farmasi pusat beroperasi 24 jam untuk melayani resep rawat jalan maupun rawat inap. Stok obat kritis (Life-saving drugs) terpantau aman (100% ketersediaan). Sistem E-Resep (E-Prescribing) sudah berjalan sehingga Anda tidak perlu membawa kertas resep secara fisik.";
+    if (text.includes("farmasi") || text.includes("apotek") || text.includes("obat")) {
+      return "Apotek / Instalasi Farmasi kami beroperasi 24 jam. Jika Anda sudah diperiksa oleh dokter, resep Anda akan otomatis masuk ke sistem E-Resep. Anda tinggal mendatangi loket Farmasi di Lantai 1 untuk pengambilan obat.";
     }
     if (text.includes("pembayaran") || text.includes("bpjs") || text.includes("asuransi") || text.includes("billing")) {
-      return "Sistem Billing SIMRS melayani:\n1. Pembayaran Mandiri (Debit/Credit/QRIS)\n2. Pasien BPJS Kesehatan (Terintegrasi V-Claim)\n3. Asuransi Swasta rekanan (AdMedika, dll)\n\nSilakan kunjungi loket Billing di lantai 1 atau cek menu 'Billing' di dashboard jika Anda menggunakan akun Admin.";
+      return "SIMRS Pro menerima berbagai jenis metode pembayaran:\n1. BPJS Kesehatan (Harap siapkan rujukan aktif dari faskes 1).\n2. Asuransi Swasta Rekanan (AdMedika, dll).\n3. Pasien Umum / Mandiri (Debit/Kredit/QRIS).\nPastikan berkas jaminan Anda sudah divalidasi oleh petugas pendaftaran.";
     }
 
-    // Default Fallback Response -> Return null to trigger Admin routing
+    // Default Fallback Response -> Return null to trigger Admin Live Agent routing
     return null;
   };
 
@@ -107,35 +92,35 @@ const AICopilot = () => {
     setQuery('');
     setIsTyping(true);
 
-    const thinkingTime = Math.floor(Math.random() * 1500) + 1000;
+    const thinkingTime = Math.floor(Math.random() * 1000) + 1000;
     
     setTimeout(() => {
       const responseText = generateSimulatedResponse(userMessage);
       
       if (responseText) {
-        // AI found a match
-        setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
+        // Bot found a FAQ match
+        setMessages(prev => [...prev, { role: 'bot', text: responseText }]);
         setIsTyping(false);
       } else {
-        // AI didn't find a match -> Route to Admin
+        // Unrecognized question -> Route to Human Admin
         setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          text: "Pertanyaan Anda telah kami terima. Karena pertanyaan ini bersifat spesifik dan di luar database otomatis saya, sistem akan mengalihkan obrolan ini ke Admin/Dokter Jaga kami untuk penanganan lebih lanjut.\n\nMohon tunggu sebentar..." 
+          role: 'bot', 
+          text: "Pesan Anda telah kami terima. Namun, keluhan/pertanyaan ini memerlukan tindak lanjut khusus dari pihak manajemen rumah sakit.\n\nSistem sedang menghubungkan Anda dengan staf Admin. Mohon tunggu sebentar..." 
         }]);
         setIsTyping(false);
         setIsAdminTyping(true);
 
-        // Simulate Admin joining after 4 seconds
+        // Simulate Human Admin joining after 4 seconds
         setTimeout(() => {
-          showToast("Admin dr. Farhan telah bergabung ke obrolan.");
+          showToast("Admin dr. Farhan (CS) telah bergabung ke obrolan.");
           
           setTimeout(() => {
             setIsAdminTyping(false);
             setMessages(prev => [...prev, {
               role: 'admin',
-              text: `Halo, saya dr. Farhan (Admin Jaga). Saya telah membaca pertanyaan Anda mengenai "${userMessage}".\n\nUntuk kasus tersebut, silakan datang langsung ke loket informasi Poli Umum besok pagi pukul 08:00 atau hubungi Call Center di (021) 119. Ada hal lain yang bisa saya bantu perjelas?`
+              text: `Selamat siang, saya dr. Farhan (Admin Customer Service). Saya telah membaca keluhan Anda mengenai "${userMessage}".\n\nTerkait masalah tersebut, bolehkah saya meminta detail tambahan seperti Nomor Rekam Medis (RM) atau data identitas Anda agar saya bisa segera melakukan pengecekan ke dalam sistem rumah sakit?`
             }]);
-          }, 1500); // Admin types for 1.5s after joining
+          }, 2000); // Admin types for 2s after joining
           
         }, 4000);
       }
@@ -163,13 +148,13 @@ const AICopilot = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bot size={24} color="var(--accent-primary)" /> AI Assistant & Live Support
+            <MessageSquare size={24} color="var(--accent-primary)" /> Live Chat Pasien & Admin
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Asisten Virtual terintegrasi yang siap menjawab pertanyaan Anda dan menghubungkan ke Admin jika diperlukan.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Pusat Bantuan Cepat. Terintegrasi dengan Bot Otomatis dan Staf Admin Rumah Sakit.</p>
         </div>
         
-        <div style={{ padding: '0.5rem 1rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <CheckCircle size={16} /> Online
+        <div style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+          <CheckCircle size={16} /> Layanan Online 24/7
         </div>
       </div>
 
@@ -200,11 +185,11 @@ const AICopilot = () => {
                   padding: '1rem', borderRadius: '12px', maxWidth: '85%',
                   border: msg.role === 'user' ? 'none' : (msg.role === 'admin' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--glass-border)'),
                   lineHeight: 1.6,
-                  borderTopLeftRadius: msg.role === 'assistant' || msg.role === 'admin' ? '2px' : '12px',
+                  borderTopLeftRadius: msg.role === 'bot' || msg.role === 'admin' ? '2px' : '12px',
                   borderTopRightRadius: msg.role === 'user' ? '2px' : '12px',
                   whiteSpace: 'pre-wrap'
                 }}>
-                  {msg.role === 'admin' && <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.5rem' }}>dr. Farhan (Admin)</div>}
+                  {msg.role === 'admin' && <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.5rem' }}>dr. Farhan (Admin CS)</div>}
                   {msg.text}
                 </div>
               </div>
@@ -221,7 +206,7 @@ const AICopilot = () => {
                   {isAdminTyping ? <ShieldCheck size={18} color="#10b981" /> : <Bot size={18} color="#60a5fa" />}
                 </div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-                  {isAdminTyping && <span style={{ color: '#10b981', marginRight: '0.5rem' }}>Admin sedang mengetik</span>}
+                  {isAdminTyping && <span style={{ color: '#10b981', marginRight: '0.5rem' }}>Admin sedang mengetik balasan</span>}
                   <span className="floating">.</span><span className="floating delay-1">.</span><span className="floating delay-2">.</span>
                 </div>
               </div>
@@ -235,7 +220,7 @@ const AICopilot = () => {
                 type="text" 
                 className="input-control" 
                 style={{ flex: 1, margin: 0 }} 
-                placeholder="Tanyakan apapun..."
+                placeholder="Tanyakan keluhan, info poli, atau bicara dengan Admin..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 disabled={isTyping || isAdminTyping}
@@ -250,13 +235,15 @@ const AICopilot = () => {
         {/* Suggested Prompts */}
         <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Activity size={18} color="var(--accent-secondary)" /> Topik Cepat
+            <Activity size={18} color="var(--accent-secondary)" /> Keluhan / Info Cepat
           </h3>
           {[
-            "Halo apa kabar?",
-            "Apa gejala Demam Berdarah?",
-            "Bagaimana jadwal dokter hari ini?",
-            "Saya mau komplain soal pelayanan farmasi!" // This will trigger the admin routing
+            "Halo selamat siang!",
+            "Saya merasa pusing terus menerus.",
+            "Apa prosedur untuk tes laboratorium?",
+            "Bagaimana ketersediaan kamar VIP?",
+            "Apakah bisa berobat menggunakan BPJS?",
+            "Saya punya keluhan serius soal dokter!" // This triggers the admin routing
           ].map((prompt, i) => (
             <button 
               key={i} 
@@ -285,4 +272,4 @@ const AICopilot = () => {
   );
 };
 
-export default AICopilot;
+export default LiveChat;
