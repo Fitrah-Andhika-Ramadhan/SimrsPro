@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Ticket, Monitor, Printer, Clock, BellRing, ArrowRight, UserPlus, Stethoscope, Pill, CreditCard, Activity } from 'lucide-react';
+import { Users, Ticket, Monitor, Printer, Clock, BellRing, Volume2, VolumeX, Stethoscope, Pill, CreditCard, Activity, UserPlus } from 'lucide-react';
 
 const QueueSystem = () => {
   // Mock initial queue data
@@ -15,8 +15,47 @@ const QueueSystem = () => {
   const [myTicket, setMyTicket] = useState(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [calledTicket, setCalledTicket] = useState(null);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
 
-  // Simulate ticket calling every 15-20 seconds for demo purposes
+  // Initialize SpeechSynthesis voices
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices(); // Trigger voice loading
+    }
+  }, []);
+
+  const playVoiceCall = (prefix, number, department) => {
+    if (!window.speechSynthesis || !isAudioEnabled) return;
+    
+    // Stop any currently playing audio
+    window.speechSynthesis.cancel();
+
+    // Format number to be spoken clearly (e.g. "kosong, dua, empat")
+    const numberStr = number.toString().padStart(3, '0');
+    let spellNumber = '';
+    for (let char of numberStr) {
+      if (char === '0') spellNumber += 'kosong, ';
+      else spellNumber += char + ', ';
+    }
+
+    const textToSpeak = `Nomor antrean. ${prefix}, ${spellNumber}. Silakan menuju, ${department}.`;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'id-ID';
+    utterance.rate = 0.85; // Slightly slower and professional
+    utterance.pitch = 1.1; // Slightly higher pitch for female teller voice simulation
+    
+    const voices = window.speechSynthesis.getVoices();
+    const idVoice = voices.find(v => v.lang === 'id-ID' && v.name.toLowerCase().includes('female')) 
+                 || voices.find(v => v.lang === 'id-ID')
+                 || voices[0];
+                 
+    if (idVoice) utterance.voice = idVoice;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Simulate ticket calling every 15 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       // Randomly pick a queue to advance
@@ -28,9 +67,15 @@ const QueueSystem = () => {
         if (queue.totalWaiting > 0) {
           const nextServing = queue.currentServing + 1;
           
-          // Show calling notification
+          // Show visual notification
           setCalledTicket(`${queue.prefix}-${nextServing.toString().padStart(3, '0')}`);
-          setTimeout(() => setCalledTicket(null), 5000);
+          
+          // Play Voice Audio
+          if (isAudioEnabled) {
+            playVoiceCall(queue.prefix, nextServing, queue.name);
+          }
+          
+          setTimeout(() => setCalledTicket(null), 8000);
           
           return {
             ...prev,
@@ -43,10 +88,10 @@ const QueueSystem = () => {
         }
         return prev;
       });
-    }, 12000); // Trigger a call every 12 seconds for the wow effect
+    }, 15000); // Trigger a call every 15 seconds
 
     return () => clearInterval(interval);
-  }, [queues]);
+  }, [queues, isAudioEnabled]);
 
   const handleTakeTicket = (key) => {
     setIsPrinting(true);
@@ -84,20 +129,50 @@ const QueueSystem = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Ticket size={28} color="var(--accent-primary)" /> Sistem Antrean Terpadu
+            <Ticket size={28} color="var(--accent-primary)" /> Sistem Antrean Cerdas
           </h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Kiosk Pengambilan Nomor Antrean & Monitor Panggilan (Real-time)</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Kiosk Pengambilan Tiket & Panggilan Suara Otomatis</p>
         </div>
         
-        {/* Calling Notification Banner */}
-        {calledTicket && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Audio Toggle Button - Required for browser autoplay policy */}
+          <button 
+            onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+            className="btn"
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+              background: isAudioEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              color: isAudioEnabled ? '#34d399' : '#f87171',
+              border: `1px solid ${isAudioEnabled ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              transition: 'all 0.3s'
+            }}
+          >
+            {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            {isAudioEnabled ? 'Suara Panggilan Aktif' : 'Aktifkan Suara Speaker'}
+          </button>
+        </div>
+      </div>
+
+      {/* Calling Notification Banner */}
+      <div style={{ height: '56px', position: 'relative' }}>
+        {calledTicket ? (
           <div style={{ 
-            background: 'var(--accent-primary)', color: 'white', padding: '0.5rem 1.5rem', 
-            borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem',
-            animation: 'pulse 1.5s infinite', fontWeight: 'bold', boxShadow: '0 0 15px rgba(37,99,235,0.5)'
+            position: 'absolute', top: 0, left: 0, right: 0,
+            background: 'var(--accent-primary)', color: 'white', padding: '1rem 1.5rem', 
+            borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem',
+            animation: 'pulse 1.5s infinite', fontWeight: 'bold', fontSize: '1.25rem', boxShadow: '0 0 20px rgba(37,99,235,0.6)',
+            zIndex: 10
           }}>
-            <BellRing size={20} />
+            <BellRing size={28} />
             PANGGILAN KEPADA NOMOR: {calledTicket}
+          </div>
+        ) : (
+          <div style={{ 
+            background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--glass-border)',
+            borderRadius: '12px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text-muted)'
+          }}>
+            Layar Monitor Panggilan
           </div>
         )}
       </div>
@@ -181,7 +256,7 @@ const QueueSystem = () => {
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                     {data.name}
                   </div>
-                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', letterSpacing: '2px' }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'white', letterSpacing: '1px' }}>
                     {data.prefix}-{data.currentServing.toString().padStart(3, '0')}
                   </div>
                 </div>
