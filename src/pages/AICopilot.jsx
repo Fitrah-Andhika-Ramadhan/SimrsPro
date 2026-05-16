@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Bot, Sparkles, Send, FileText, Activity, Key, CheckCircle, AlertCircle } from 'lucide-react';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const AICopilot = () => {
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello, Dr. Admin. I am your Medical AI Assistant powered by Anthropic Claude. I can assist you with patient data analysis, medical summaries, and system predictions.' }
+    { role: 'assistant', text: 'Hello, Dr. Admin. I am your Medical AI Assistant powered by OpenAI ChatGPT. I can assist you with patient data analysis, medical summaries, and system predictions.' }
   ]);
   const [apiKey, setApiKey] = useState('');
   const [isApiKeySet, setIsApiKeySet] = useState(false);
 
   useEffect(() => {
     // Check if API key exists in local storage
-    const storedKey = localStorage.getItem('CLAUDE_API_KEY');
+    const storedKey = localStorage.getItem('OPENAI_API_KEY');
     if (storedKey) {
       setApiKey(storedKey);
       setIsApiKeySet(true);
@@ -23,7 +23,7 @@ const AICopilot = () => {
   const handleSaveApiKey = (e) => {
     e.preventDefault();
     if (apiKey.trim()) {
-      localStorage.setItem('CLAUDE_API_KEY', apiKey);
+      localStorage.setItem('OPENAI_API_KEY', apiKey);
       setIsApiKeySet(true);
     }
   };
@@ -38,12 +38,12 @@ const AICopilot = () => {
     setIsTyping(true);
 
     try {
-      const anthropic = new Anthropic({
+      const openai = new OpenAI({
         apiKey: apiKey,
         dangerouslyAllowBrowser: true // Required since we are calling it directly from Vite client
       });
 
-      // Prepare chat history (convert text to content)
+      // Prepare chat history
       const chatHistory = messages
         .filter((msg, index) => !(index === 0 && msg.role === 'assistant')) // Remove the initial greeting to keep context clean
         .map(msg => ({
@@ -54,21 +54,25 @@ const AICopilot = () => {
       // Add the new user message
       chatHistory.push({ role: 'user', content: userMessage });
 
-      const msg = await anthropic.messages.create({
-        model: "claude-3-haiku-20240307", // Fast, highly capable model
-        max_tokens: 1024,
-        system: "You are SIMRS Pro Copilot, a highly advanced, professional medical AI assistant integrated into a modern Hospital Management System. You help doctors and hospital administrators by analyzing medical data, summarizing patient records, and giving operational advice. Always respond in a professional, clinical, yet helpful tone.",
-        messages: chatHistory
+      // Add System Instructions
+      const apiMessages = [
+        { role: "system", content: "You are SIMRS Pro Copilot, a highly advanced, professional medical AI assistant integrated into a modern Hospital Management System. You help doctors and hospital administrators by analyzing medical data, summarizing patient records, and giving operational advice. Always respond in a professional, clinical, yet helpful tone." },
+        ...chatHistory
+      ];
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini", // Fast, highly capable, and widely available model
+        messages: apiMessages,
       });
 
-      const aiResponse = msg.content[0].text;
+      const aiResponse = completion.choices[0].message.content;
       setMessages(prev => [...prev, { role: 'assistant', text: aiResponse }]);
 
     } catch (error) {
-      console.error("Claude Error:", error);
+      console.error("OpenAI Error:", error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        text: `Error connecting to Claude API: ${error.message}. Please check your API key.` 
+        text: `Error connecting to OpenAI API: ${error.message}. Please check your API key.` 
       }]);
     } finally {
       setIsTyping(false);
@@ -82,16 +86,16 @@ const AICopilot = () => {
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Bot size={24} color="var(--accent-primary)" /> SIMRS AI Copilot
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Next-gen clinical decision support powered by Anthropic Claude.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Next-gen clinical decision support powered by OpenAI ChatGPT.</p>
         </div>
         
         {isApiKeySet ? (
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={() => { localStorage.removeItem('CLAUDE_API_KEY'); setIsApiKeySet(false); setApiKey(''); }} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+            <button onClick={() => { localStorage.removeItem('OPENAI_API_KEY'); setIsApiKeySet(false); setApiKey(''); }} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               Clear API Key
             </button>
             <div style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              <Sparkles size={16} /> Claude Connected
+              <Sparkles size={16} /> OpenAI Connected
             </div>
           </div>
         ) : (
@@ -112,15 +116,15 @@ const AICopilot = () => {
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', border: '1px solid var(--accent-primary)' }}>
                 <Key size={32} color="var(--accent-glow)" />
               </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Connect Anthropic Claude</h3>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Connect OpenAI ChatGPT</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '400px' }}>
-                To activate the real AI Copilot, please enter your Claude API Key. Your key is stored securely in your browser's local storage and is never sent to our servers.
+                To activate the real AI Copilot, please enter your OpenAI API Key. Your key is stored securely in your browser's local storage and is never sent to our servers.
               </p>
               <form onSubmit={handleSaveApiKey} style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input 
                   type="password" 
                   className="input-control" 
-                  placeholder="sk-ant-api03-..."
+                  placeholder="sk-proj-..."
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   required
@@ -181,7 +185,7 @@ const AICopilot = () => {
                     type="text" 
                     className="input-control" 
                     style={{ flex: 1, margin: 0 }} 
-                    placeholder="Ask Claude about patient symptoms, diagnoses, or operational data..."
+                    placeholder="Ask ChatGPT about patient symptoms, diagnoses, or operational data..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     disabled={isTyping}
