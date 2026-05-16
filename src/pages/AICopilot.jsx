@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Sparkles, Send, FileText, Activity, CheckCircle, HeartPulse, User } from 'lucide-react';
+import { Bot, Sparkles, Send, FileText, Activity, CheckCircle, HeartPulse, User, ShieldCheck, Bell } from 'lucide-react';
 
 const AICopilot = () => {
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [toast, setToast] = useState(null);
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
@@ -18,7 +20,12 @@ const AICopilot = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isAdminTyping]);
+
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 4000);
+  };
 
   // DATABASE SIMULASI OFFLINE (KATA KUNCI & JAWABAN)
   const generateSimulatedResponse = (input) => {
@@ -87,8 +94,8 @@ const AICopilot = () => {
       return "Sistem Billing SIMRS melayani:\n1. Pembayaran Mandiri (Debit/Credit/QRIS)\n2. Pasien BPJS Kesehatan (Terintegrasi V-Claim)\n3. Asuransi Swasta rekanan (AdMedika, dll)\n\nSilakan kunjungi loket Billing di lantai 1 atau cek menu 'Billing' di dashboard jika Anda menggunakan akun Admin.";
     }
 
-    // Default Fallback Response
-    return "Maaf, saya belum memahami pertanyaan Anda secara detail. \n\nNamun, jika Anda membutuhkan bantuan seputar:\n- Gejala penyakit (contoh: 'Saya sakit kepala', 'Gejala demam berdarah')\n- Informasi Rumah Sakit (contoh: 'Jadwal dokter', 'Kamar rawat inap', 'Layanan IGD')\nSilakan ketik ulang kata kunci tersebut agar saya bisa merespons dengan tepat!";
+    // Default Fallback Response -> Return null to trigger Admin routing
+    return null;
   };
 
   const handleSend = (e) => {
@@ -100,35 +107,76 @@ const AICopilot = () => {
     setQuery('');
     setIsTyping(true);
 
-    // Simulate AI thinking and typing delay (1.0 to 2.5 seconds)
     const thinkingTime = Math.floor(Math.random() * 1500) + 1000;
     
     setTimeout(() => {
       const responseText = generateSimulatedResponse(userMessage);
-      setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
-      setIsTyping(false);
+      
+      if (responseText) {
+        // AI found a match
+        setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
+        setIsTyping(false);
+      } else {
+        // AI didn't find a match -> Route to Admin
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          text: "Pertanyaan Anda telah kami terima. Karena pertanyaan ini bersifat spesifik dan di luar database otomatis saya, sistem akan mengalihkan obrolan ini ke Admin/Dokter Jaga kami untuk penanganan lebih lanjut.\n\nMohon tunggu sebentar..." 
+        }]);
+        setIsTyping(false);
+        setIsAdminTyping(true);
+
+        // Simulate Admin joining after 4 seconds
+        setTimeout(() => {
+          showToast("Admin dr. Farhan telah bergabung ke obrolan.");
+          
+          setTimeout(() => {
+            setIsAdminTyping(false);
+            setMessages(prev => [...prev, {
+              role: 'admin',
+              text: `Halo, saya dr. Farhan (Admin Jaga). Saya telah membaca pertanyaan Anda mengenai "${userMessage}".\n\nUntuk kasus tersebut, silakan datang langsung ke loket informasi Poli Umum besok pagi pukul 08:00 atau hubungi Call Center di (021) 119. Ada hal lain yang bisa saya bantu perjelas?`
+            }]);
+          }, 1500); // Admin types for 1.5s after joining
+          
+        }, 4000);
+      }
     }, thinkingTime);
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'calc(100vh - 150px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'calc(100vh - 150px)', position: 'relative' }}>
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'absolute', top: '10px', right: '10px', zIndex: 50,
+          background: 'var(--accent-primary)', color: 'white',
+          padding: '0.75rem 1.5rem', borderRadius: '8px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <Bell size={18} />
+          <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{toast}</span>
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bot size={24} color="var(--accent-primary)" /> AI Assistant (Mode Pintar)
+            <Bot size={24} color="var(--accent-primary)" /> AI Assistant & Live Support
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Asisten Virtual terintegrasi yang siap menjawab pertanyaan operasional dan konsultasi kesehatan dasar.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Asisten Virtual terintegrasi yang siap menjawab pertanyaan Anda dan menghubungkan ke Admin jika diperlukan.</p>
         </div>
         
         <div style={{ padding: '0.5rem 1rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <CheckCircle size={16} /> Online (No API Key Required)
+          <CheckCircle size={16} /> Online
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', flex: 1, minHeight: 0 }}>
         
         {/* Main Chat Interface */}
-        <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+        <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', position: 'relative' }}>
           
           <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {messages.map((msg, i) => (
@@ -140,32 +188,40 @@ const AICopilot = () => {
               }}>
                 <div style={{ 
                   width: '36px', height: '36px', borderRadius: '50%', 
-                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(59, 130, 246, 0.2)',
+                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : (msg.role === 'admin' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: msg.role === 'user' ? '1px solid var(--glass-border)' : '1px solid #60a5fa',
+                  border: msg.role === 'user' ? '1px solid var(--glass-border)' : (msg.role === 'admin' ? '1px solid #10b981' : '1px solid #60a5fa'),
                   flexShrink: 0
                 }}>
-                  {msg.role === 'user' ? <User size={16} /> : <Bot size={18} color="#60a5fa" />}
+                  {msg.role === 'user' ? <User size={16} /> : (msg.role === 'admin' ? <ShieldCheck size={18} color="#10b981" /> : <Bot size={18} color="#60a5fa" />)}
                 </div>
                 <div style={{ 
-                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : 'rgba(10, 17, 40, 0.5)',
+                  background: msg.role === 'user' ? 'var(--bg-tertiary)' : (msg.role === 'admin' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(10, 17, 40, 0.5)'),
                   padding: '1rem', borderRadius: '12px', maxWidth: '85%',
-                  border: msg.role === 'user' ? 'none' : '1px solid var(--glass-border)',
+                  border: msg.role === 'user' ? 'none' : (msg.role === 'admin' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--glass-border)'),
                   lineHeight: 1.6,
-                  borderTopLeftRadius: msg.role === 'assistant' ? '2px' : '12px',
+                  borderTopLeftRadius: msg.role === 'assistant' || msg.role === 'admin' ? '2px' : '12px',
                   borderTopRightRadius: msg.role === 'user' ? '2px' : '12px',
                   whiteSpace: 'pre-wrap'
                 }}>
+                  {msg.role === 'admin' && <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.5rem' }}>dr. Farhan (Admin)</div>}
                   {msg.text}
                 </div>
               </div>
             ))}
-            {isTyping && (
+            
+            {(isTyping || isAdminTyping) && (
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #60a5fa' }}>
-                  <Bot size={18} color="#60a5fa" />
+                <div style={{ 
+                  width: '36px', height: '36px', borderRadius: '50%', 
+                  background: isAdminTyping ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  border: isAdminTyping ? '1px solid #10b981' : '1px solid #60a5fa' 
+                }}>
+                  {isAdminTyping ? <ShieldCheck size={18} color="#10b981" /> : <Bot size={18} color="#60a5fa" />}
                 </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', gap: '0.25rem' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                  {isAdminTyping && <span style={{ color: '#10b981', marginRight: '0.5rem' }}>Admin sedang mengetik</span>}
                   <span className="floating">.</span><span className="floating delay-1">.</span><span className="floating delay-2">.</span>
                 </div>
               </div>
@@ -179,12 +235,12 @@ const AICopilot = () => {
                 type="text" 
                 className="input-control" 
                 style={{ flex: 1, margin: 0 }} 
-                placeholder="Sapa AI, tanya seputar kesehatan, atau data rumah sakit..."
+                placeholder="Tanyakan apapun..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                disabled={isTyping}
+                disabled={isTyping || isAdminTyping}
               />
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 1.25rem' }} disabled={isTyping || !query.trim()}>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 1.25rem' }} disabled={isTyping || isAdminTyping || !query.trim()}>
                 <Send size={18} />
               </button>
             </form>
@@ -194,18 +250,13 @@ const AICopilot = () => {
         {/* Suggested Prompts */}
         <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
           <h3 style={{ fontSize: '1.125rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Activity size={18} color="var(--accent-secondary)" /> Topik Tersedia
+            <Activity size={18} color="var(--accent-secondary)" /> Topik Cepat
           </h3>
           {[
-            "Halo selamat pagi!",
-            "Apa kabarmu hari ini?",
-            "Saya sedang sakit kepala dan pusing.",
-            "Apa saja gejala Demam Berdarah?",
-            "Berapa tensi darah tinggi?",
-            "Bagaimana cara mengatasi Asam Lambung?",
-            "Tolong info jadwal dokter spesialis.",
-            "Bagaimana ketersediaan kamar rawat inap?",
-            "Apakah bisa pakai asuransi / BPJS?"
+            "Halo apa kabar?",
+            "Apa gejala Demam Berdarah?",
+            "Bagaimana jadwal dokter hari ini?",
+            "Saya mau komplain soal pelayanan farmasi!" // This will trigger the admin routing
           ].map((prompt, i) => (
             <button 
               key={i} 
