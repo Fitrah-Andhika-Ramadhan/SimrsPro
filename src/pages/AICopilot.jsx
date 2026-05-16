@@ -6,14 +6,14 @@ const AICopilot = () => {
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello, Dr. Admin. I am your Medical AI Assistant powered by DeepSeek AI. I can assist you with patient data analysis, medical summaries, and system predictions.' }
+    { role: 'assistant', text: 'Hello, Dr. Admin. I am your Medical AI Assistant powered by Hugging Face Inference AI. I can assist you with patient data analysis, medical summaries, and system predictions.' }
   ]);
   const [apiKey, setApiKey] = useState('');
   const [isApiKeySet, setIsApiKeySet] = useState(false);
 
   useEffect(() => {
     // Check if API key exists in local storage
-    const storedKey = localStorage.getItem('DEEPSEEK_API_KEY');
+    const storedKey = localStorage.getItem('HF_API_KEY');
     if (storedKey) {
       setApiKey(storedKey);
       setIsApiKeySet(true);
@@ -23,7 +23,7 @@ const AICopilot = () => {
   const handleSaveApiKey = (e) => {
     e.preventDefault();
     if (apiKey.trim()) {
-      localStorage.setItem('DEEPSEEK_API_KEY', apiKey);
+      localStorage.setItem('HF_API_KEY', apiKey);
       setIsApiKeySet(true);
     }
   };
@@ -38,9 +38,9 @@ const AICopilot = () => {
     setIsTyping(true);
 
     try {
-      // DeepSeek is fully compatible with OpenAI SDK, we just need to change the baseURL
+      // Hugging Face provides an OpenAI-compatible API endpoint
       const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com/v1',
+        baseURL: 'https://api-inference.huggingface.co/v1/',
         apiKey: apiKey,
         dangerouslyAllowBrowser: true // Required since we are calling it directly from Vite client
       });
@@ -63,18 +63,19 @@ const AICopilot = () => {
       ];
 
       const completion = await openai.chat.completions.create({
-        model: "deepseek-chat", // The official DeepSeek standard model
+        model: "mistralai/Mistral-7B-Instruct-v0.3", // Reliable open-source model available on Hugging Face free tier
         messages: apiMessages,
+        max_tokens: 512,
       });
 
       const aiResponse = completion.choices[0].message.content;
       setMessages(prev => [...prev, { role: 'assistant', text: aiResponse }]);
 
     } catch (error) {
-      console.error("DeepSeek Error:", error);
+      console.error("Hugging Face Error:", error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        text: `Error connecting to DeepSeek API: ${error.message}. Please check your API key.` 
+        text: `Error connecting to Hugging Face API: ${error.message}. Please check your API key.` 
       }]);
     } finally {
       setIsTyping(false);
@@ -88,16 +89,16 @@ const AICopilot = () => {
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Bot size={24} color="var(--accent-primary)" /> SIMRS AI Copilot
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Next-gen clinical decision support powered by DeepSeek AI.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Next-gen clinical decision support powered by Hugging Face AI.</p>
         </div>
         
         {isApiKeySet ? (
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={() => { localStorage.removeItem('DEEPSEEK_API_KEY'); setIsApiKeySet(false); setApiKey(''); }} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+            <button onClick={() => { localStorage.removeItem('HF_API_KEY'); setIsApiKeySet(false); setApiKey(''); }} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               Clear API Key
             </button>
             <div style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: '9999px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              <Sparkles size={16} /> DeepSeek Connected
+              <Sparkles size={16} /> Hugging Face Connected
             </div>
           </div>
         ) : (
@@ -118,15 +119,15 @@ const AICopilot = () => {
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', border: '1px solid var(--accent-primary)' }}>
                 <Key size={32} color="var(--accent-glow)" />
               </div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Connect DeepSeek AI</h3>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Connect Hugging Face AI</h3>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '400px' }}>
-                To activate the real AI Copilot, please enter your DeepSeek API Key. Your key is stored securely in your browser's local storage and is never sent to our servers.
+                To activate the real AI Copilot, please enter your Hugging Face API Token (hf_...). Your token is stored securely in your browser's local storage and is never sent to our servers.
               </p>
               <form onSubmit={handleSaveApiKey} style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input 
                   type="password" 
                   className="input-control" 
-                  placeholder="sk-..."
+                  placeholder="hf_..."
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   required
@@ -187,7 +188,7 @@ const AICopilot = () => {
                     type="text" 
                     className="input-control" 
                     style={{ flex: 1, margin: 0 }} 
-                    placeholder="Ask DeepSeek about patient symptoms, diagnoses, or operational data..."
+                    placeholder="Ask Hugging Face AI about patient symptoms, diagnoses, or operational data..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     disabled={isTyping}
