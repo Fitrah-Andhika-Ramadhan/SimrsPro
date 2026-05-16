@@ -13,7 +13,7 @@ import LandingPage from './pages/LandingPage';
 import Laboratory from './pages/Laboratory';
 import Inpatient from './pages/Inpatient';
 import Reports from './pages/Reports';
-import AICopilot from './pages/AICopilot';
+import LiveChat from './pages/LiveChat';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -32,7 +32,7 @@ function App() {
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="ai-copilot" element={<AICopilot />} />
+          <Route path="live-chat" element={<LiveChat />} />
           <Route path="patients" element={<Patients />} />
           <Route path="inpatient" element={<Inpatient />} />
           <Route path="appointments" element={<Appointments />} />
