@@ -41,9 +41,9 @@ const AICopilot = () => {
       // Initialize Gemini API
       const genAI = new GoogleGenerativeAI(apiKey);
       
-      // Use gemini-pro-latest since older models have been retired
+      // Use gemini-3-flash-preview which is the latest fast model with free tier in 2026
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-pro-latest",
+        model: "gemini-3-flash-preview",
         systemInstruction: "You are SIMRS Pro Copilot, a highly advanced, professional medical AI assistant integrated into a modern Hospital Management System. You help doctors and hospital administrators by analyzing medical data, summarizing patient records, and giving operational advice. Always respond in a professional, clinical, yet helpful tone."
       });
 
