@@ -47,11 +47,14 @@ const AICopilot = () => {
         systemInstruction: "You are SIMRS Pro Copilot, a highly advanced, professional medical AI assistant integrated into a modern Hospital Management System. You help doctors and hospital administrators by analyzing medical data, summarizing patient records, and giving operational advice. Always respond in a professional, clinical, yet helpful tone."
       });
 
-      // Prepare chat history for context
-      const chatHistory = messages.map(msg => ({
-        role: msg.role === 'ai' ? 'model' : 'user',
-        parts: [{ text: msg.text }]
-      }));
+      // Prepare chat history for context (skip the first hardcoded greeting if it's the only AI message before a user message)
+      // Gemini requires the first message in history to be 'user'
+      const chatHistory = messages
+        .filter((msg, index) => !(index === 0 && msg.role === 'ai')) // Remove the initial greeting
+        .map(msg => ({
+          role: msg.role === 'ai' ? 'model' : 'user',
+          parts: [{ text: msg.text }]
+        }));
 
       const chat = model.startChat({
         history: chatHistory,
